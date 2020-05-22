@@ -1,0 +1,26 @@
+version: "3.3"
+
+services:
+  traefik:
+    image: "traefik:latest"
+    command:
+      - --entrypoints.web.address=:80
+      - --providers.docker
+      - --api.insecure
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  mshowto:
+    image: hellonode:latest
+    labels: 
+      - "traefik.enable=true"
+      - "traefik.http.routers.mshowto.rule=Host(`localhost`)"
+      - "traefik.http.routers.mshowto.entrypoints=web"
+      - "traefik.http.routers.mshowto.middlewares=all-in-one"
+      - "traefik.http.middlewares.all-in-one.chain.middlewares=my-limit,my-auth"
+      - "traefik.http.middlewares.my-auth.basicauth.users=mert:$$apr1$$ntBMSP5l$$.AFKylsN.z1ed86GPzT3R/" #pwd:mert
+      - "traefik.http.middlewares.my-limit.ratelimit.average=2"
+      - "traefik.http.middlewares.my-limit.ratelimit.period=5s"
